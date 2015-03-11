@@ -3,7 +3,7 @@ var npm = require('npm'),
     fs = require('fs');
 
 var onVersions = ['on-major', 'on-minor', 'on-patch', 'on-build'],
-    parsedIndexLookup = { 'on-major':1, 'on-minor':2, 'on-patch':3, 'on-build':4 };
+    parsedIndexLookup = { 'on-major': 'major', 'on-minor': 'minor', 'on-patch': 'patch', 'on-build': 'build' };
 
 log = require('npmlog');
 log.heading = 'publish';
@@ -53,23 +53,34 @@ exports.publish = function(options, callback) {
             remoteVersion(pkg, function(err, remoteVersion) {
                 if (err) {
                     callback(err);
-                } else if (shouldPublish(options, localVersion, remoteVersion)) {
-                    if (isTravis()) {
-                        log.info('running in travis');
-                        var npmUser = npmUserCredentials();
-                        if (npmUser) {
-                            npmAddUser(npmUser, function(err) {
-                                if (err) {
-                                    callback('error while trying to add npm user in travis: ' + err);
-                                } else {
-                                    npmPublish(callback);
-                                }
-                            });
-                        } else {
-                            callback('npm user credentials not found, make sure NPM_USERNAME, NPM_PASSWORD and NPM_EMAIL environment variables are set');
+                } else {
+                    var should = shouldPublish(options, localVersion, remoteVersion);
+                    if (should) {
+                        if (options['dryrun']) {
+                            return callback();
                         }
-                    } else {
-                        npmPublish(callback);
+                        if (isTravis()) {
+                            log.info('running in travis');
+                            var npmUser = npmUserCredentials();
+                            if (npmUser) {
+                                npmAddUser(npmUser, function(err) {
+                                    if (err) {
+                                        callback('error while trying to add npm user in travis: ' + err);
+                                    } else {
+                                        npmPublish(callback);
+                                    }
+                                });
+                            } else {
+                                callback('npm user credentials not found, make sure NPM_USERNAME, NPM_PASSWORD and NPM_EMAIL environment variables are set');
+                            }
+                        } else {
+                            npmPublish(callback);
+                        }
+                    }
+                    else {
+                        if (options['dryrun']) {
+                            process.exit(1);
+                        }
                     }
                 }
             });

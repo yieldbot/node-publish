@@ -3,7 +3,7 @@
 var publish = require('../index');
     nopt = require("nopt"),
     knownOpts = { 'on-major':Boolean, 'on-minor':Boolean, 'on-patch':Boolean, 'on-build':Boolean },
-    shorthands = { "?":["--help"], "v":["--version"]},
+    shorthands = { "?":["--help"], "v":["--version"], "t": ["--test"]},
     options = nopt(knownOpts, shorthands);
 
 if (options.version) {
@@ -26,6 +26,7 @@ if (options.help) {
      --on-patch  Publishes on patch version changes.
      --on-build  Publishes on build version changes.
      --version   Print the version of publish.
+     --dryrun    Test whether a publish would be done. Return 0 if publish would be done, 1 otherwise.
      --help      Print this help.
 
      Please report bugs!  https://github.com/cmanzana/node-publish/issues
